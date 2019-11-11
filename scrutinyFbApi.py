@@ -10,24 +10,34 @@ cnx = mysql.connector.connect(user=environ.get('user'), password=environ.get('pa
                               database=environ.get('database'),
                               connection_timeout=10)
 
-#def getPlayerInfo(playerID):
-#    mycursor = cnx.cursor()
-#    mycursor.execute("SELECT * from playerInfo WHERE player_id = '/players/M/McCaCh01'")
-#    myresult = mycursor.fetchall()
-#    return myresult[0]
-
 @app.route('/')
 def welcome():
-    return 'Welcome to Scrutiny FB API! Hosted by Heroku, documentation to be released on my github soon!'
+    return 'Welcome to Scrutiny FB API! Hosted by Heroku, documentation to be released on https://github.com/shan-srini soon!'
+    
+@app.route('/error')
+def oops():
+    return 'Oops API hit an error'
 
 @app.route('/getPlayerId')
-def hello():
-#    playerID = request.args.get('player_id')
+def getPlayerId():
+    #playerID = "'/players/M/McCaCh01'"
 #    return jsonify(database_hello(playerID))
+    playerID = "'" + request.args['player_id1'] + "'"
+    #playerID2 = "'" + request.args['player_id2'] + "'"
+    query = "SELECT * from playerInfo WHERE player_id = %s" % (playerID)
     mycursor = cnx.cursor()
-    mycursor.execute("SELECT * from playerInfo WHERE player_id = '/players/M/McCaCh01'")
+#    try:
+    mycursor.execute(query)
+#    except my.Error as e:
+#        return jsonify(e)
     myresult = mycursor.fetchall()
-    return jsonify(myresult[0])
+    return jsonify(myresult)
+
+#@app.route('/updatePlayerId')
+#def updatePlayerId():
+#    playerID1 = request.args[]
+
+
 
 if __name__ == "__main__":
-	app.run()
+    app.run()
