@@ -1,6 +1,8 @@
 from os import environ
 from flask import Flask, jsonify, request
 import mysql.connector
+import pandas as pd
+import pymysql
 
 app = Flask(__name__)
 
@@ -8,31 +10,49 @@ cnx = mysql.connector.connect(user=environ.get('user'), password=environ.get('pa
                               host=environ.get('host'),
                               port=environ.get('port'),
                               database=environ.get('database'),
-                              connection_timeout=10)
+                              connection_timeout=15)
 
 def formatString(f):
     return "'" + f + "'"
 
+
 @app.route('/')
 def welcome():
-    return 'Welcome to Scrutiny FB API! Hosted by Heroku, documentation to be released on my github soon!'
+    return """
+    <h1> Welcome to Scrutiny FB API! </h1>
+    <h2> Created by Shan </h2>
+    <p>Documentation to be released on my
+    <a href="https://github.com/shan-srini/scrutinyFB_api"> Github </a>
+    soon!</p>
+    <p>Thanks to Heroku, hosted on a free tier Dyno!<p>"""
 
+# Get player by ID
 @app.route('/getPlayerId')
 def getPlayerId():
     #playerID = "'/players/M/McCaCh01'"
 #    return jsonify(database_hello(playerID))
-    playerID1 = "'" + request.args['player_id1'] + "'"
+    playerID1 = "'" + request.args['playerId'] + "'"
     #playerID2 = "'" + request.args['player_id2'] + "'"
     query = "SELECT * from playerInfo WHERE player_id = %s" % (playerID1)
-    mycursor = cnx.cursor()
-#    try:
-    mycursor.execute(query)
-#    except my.Error as e:
-#        return jsonify(e)
-    myresult = mycursor.fetchall()
-    myresult = jsonify(myresult)
-    return myresult
+    df = pd.read_sql(query,cnx)
+    return jsonify(df.to_json(orient='records')[1:-1])
+#    mycursor = cnx.cursor(dictionary=True)
+##    try:
+#    mycursor.execute(query)
+##    except my.Error as e:
+##        return jsonify(e)
+#    myresult = mycursor.fetchall()
+#    return jsonify(myresult)
 
+# get player by name
+@app.route('/getPlayerByName')
+def getPlayerByName():
+    playerName = "'" + request.args['playerName'] + "'"
+    query = "SELECT * from playerInfo WHERE player_name = %s" % (playerName)
+    df = pd.read_sql(query,cnx)
+    return jsonify(df.to_json(orient='records')[1:-1])
+
+# insert player must include all details
 @app.route('/insertPlayer')
 def updatePlayerId():
     playerID = request.args['playerID']
@@ -46,9 +66,9 @@ def updatePlayerId():
     
     mycursor = cnx.cursor()
     mycursor.execute(insert_player)
-    
     return 'Success, Player Inserted'
     
+# delete player by ID
 @app.route('/deletePlayer')
 def deletePlayerById():
     playerID = formatString(request.args['playerID'])
@@ -56,9 +76,17 @@ def deletePlayerById():
     
     mycursor = cnx.cursor()
     mycursor.execute(delete_player)
-    
     return 'Success, Player Deleted'
 
+# Returns all player names
+@app.route('/getAllPlayerNames')
+def getAllPlayerNames():
+    query = "SELECT player_name FROM playerInfo"
+    cursor = cnx.cursor()
+    cursor.execute(query)
+    data = cursor.fetchall()
+    return jsonify(data)
+    
 
 
 if __name__ == "__main__":
