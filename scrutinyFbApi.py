@@ -87,7 +87,14 @@ def getAllPlayerNames():
     data = cursor.fetchall()
     return jsonify(data)
     
-
+# Returns all player statistics by ID
+@app.route('/getStatsById')
+def getStatsById():
+    playerID = formatString(request.args['playerID'])
+    query = "SELECT * FROM playerStats WHERE player_id = %s" % (playerID)
+    cursor = cnx.cursor()
+    df = pd.read_sql(query, cnx)
+    return jsonify(df.to_json(orient='records'))
 
 if __name__ == "__main__":
     app.run()
