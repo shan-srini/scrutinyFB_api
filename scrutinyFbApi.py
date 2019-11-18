@@ -95,6 +95,24 @@ def getStatsById():
     cursor = cnx.cursor()
     df = pd.read_sql(query, cnx)
     return jsonify(df.to_json(orient='records'))
+    
+# Returns all player statistics by ID
+@app.route('/getStatsByIdAway')
+def getStatsByIdAway():
+    playerID = formatString(request.args['playerID'])
+    query = "SELECT * FROM playerStats WHERE player_id = %s AND home_or_away = '@'" % (playerID)
+    cursor = cnx.cursor()
+    df = pd.read_sql(query, cnx)
+    return jsonify(df.to_json(orient='records'))
+
+# Returns all player statistics by ID
+@app.route('/getStatsByIdHome')
+def getStatsByIdHome():
+    playerID = formatString(request.args['playerID'])
+    query = "SELECT * FROM playerStats WHERE player_id = %s AND NOT home_or_away = '@'" % (playerID)
+    cursor = cnx.cursor()
+    df = pd.read_sql(query, cnx)
+    return jsonify(df.to_json(orient='records'))
 
 if __name__ == "__main__":
     app.run()
