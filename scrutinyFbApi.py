@@ -6,11 +6,14 @@ import pymysql
 
 app = Flask(__name__)
 
-cnx = mysql.connector.connect(user=environ.get('user'), password=environ.get('pass'),
-                              host=environ.get('host'),
-                              port=environ.get('port'),
-                              database=environ.get('database'),
-                              connection_timeout=15)
+def getConnection():
+    cnx = mysql.connector.connect(user=environ.get('user'),
+    password=environ.get('pass'),
+    host=environ.get('host'),
+    port=environ.get('port'),
+    database=environ.get('database'),
+    connection_timeout=20)
+    return cnx
 
 def formatString(f):
     return "'" + f + "'"
@@ -29,12 +32,15 @@ def welcome():
 # Get player by ID
 @app.route('/getPlayerId')
 def getPlayerId():
+    cnx = getConnection()
     #playerID = "'/players/M/McCaCh01'"
 #    return jsonify(database_hello(playerID))
     playerID1 = "'" + request.args['playerId'] + "'"
     #playerID2 = "'" + request.args['player_id2'] + "'"
     query = "SELECT * from playerInfo WHERE player_id = %s" % (playerID1)
     df = pd.read_sql(query,cnx)
+    cnx.commit()
+    cnx.close()
     return jsonify(df.to_json(orient='records')[1:-1])
 #    mycursor = cnx.cursor(dictionary=True)
 ##    try:
@@ -47,14 +53,18 @@ def getPlayerId():
 # get player by name
 @app.route('/getPlayerByName')
 def getPlayerByName():
+    cnx = getConnection()
     playerName = "'" + request.args['playerName'] + "'"
     query = "SELECT * from playerInfo WHERE player_name = %s" % (playerName)
     df = pd.read_sql(query,cnx)
+    cnx.commit()
+    cnx.close()
     return jsonify(df.to_json(orient='records')[1:-1])
 
 # insert player must include all details
 @app.route('/insertPlayer')
 def updatePlayerId():
+    cnx = getConnection()
     playerID = request.args['playerID']
     playerName = request.args['playerName']
     position = request.args['position']
@@ -66,52 +76,69 @@ def updatePlayerId():
     
     mycursor = cnx.cursor()
     mycursor.execute(insert_player)
+    cnx.commit()
+    cnx.close()
     return 'Success, Player Inserted'
     
 # delete player by ID
 @app.route('/deletePlayer')
 def deletePlayerById():
+    cnx = getConnection()
     playerID = formatString(request.args['playerID'])
     delete_player = "DELETE FROM playerInfo WHERE player_id = %s" % (playerID)
     
     mycursor = cnx.cursor()
     mycursor.execute(delete_player)
+    cnx.commit()
+    cnx.close()
     return 'Success, Player Deleted'
 
 # Returns all player names
 @app.route('/getAllPlayerNames')
 def getAllPlayerNames():
+    cnx = getConnection()
     query = "SELECT player_name FROM playerInfo"
     cursor = cnx.cursor()
     cursor.execute(query)
     data = cursor.fetchall()
+    cnx.commit()
+    cnx.close()
     return jsonify(data)
     
 # Returns all player statistics by ID
 @app.route('/getStatsById')
 def getStatsById():
+    cnx = getConnection()
     playerID = formatString(request.args['playerID'])
     query = "SELECT * FROM playerStats WHERE player_id = %s" % (playerID)
     cursor = cnx.cursor()
     df = pd.read_sql(query, cnx)
+    cnx.commit()
+    cnx.close()
     return jsonify(df.to_json(orient='records'))
     
 # Returns all player statistics by ID
 @app.route('/getStatsByIdAway')
 def getStatsByIdAway():
+    cnx = getConnection()
     playerID = formatString(request.args['playerID'])
     query = "SELECT * FROM playerStats WHERE player_id = %s AND home_or_away = '@'" % (playerID)
     cursor = cnx.cursor()
     df = pd.read_sql(query, cnx)
+    cnx.commit()
+    cnx.close()
     return jsonify(df.to_json(orient='records'))
 
 # Returns all player statistics by ID
 @app.route('/getStatsByIdHome')
 def getStatsByIdHome():
+    cnx = getConnection()
     playerID = formatString(request.args['playerID'])
     query = "SELECT * FROM playerStats WHERE player_id = %s AND NOT home_or_away = '@'" % (playerID)
     cursor = cnx.cursor()
     df = pd.read_sql(query, cnx)
+    cnx.commit()
+    cnx.close()
     return jsonify(df.to_json(orient='records'))
 
 if __name__ == "__main__":
