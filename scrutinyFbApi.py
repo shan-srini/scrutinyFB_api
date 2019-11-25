@@ -71,22 +71,22 @@ def updatePlayerId():
     teamID = request.args['teamID']
     height = request.args['height']
     weight = request.args['weight']
-    
+
     insert_player = "INSERT INTO `shan`.`playerInfo` (`player_id`, `player_name`, `player_position`, `current_team`, `player_height`, `player_weight`) VALUES (%s,%s,%s,%s,%s,%s)" % (formatString(playerID), formatString(playerName), formatString(position), formatString(teamID), formatString(height), formatString(weight))
-    
+
     mycursor = cnx.cursor()
     mycursor.execute(insert_player)
     cnx.commit()
     cnx.close()
     return 'Success, Player Inserted'
-    
+
 # delete player by ID
 @app.route('/deletePlayer')
 def deletePlayerById():
     cnx = getConnection()
     playerID = formatString(request.args['playerID'])
     delete_player = "DELETE FROM playerInfo WHERE player_id = %s" % (playerID)
-    
+
     mycursor = cnx.cursor()
     mycursor.execute(delete_player)
     cnx.commit()
@@ -104,7 +104,7 @@ def getAllPlayerNames():
     cnx.commit()
     cnx.close()
     return jsonify(data)
-    
+
 # Returns all player statistics by ID
 @app.route('/getStatsById')
 def getStatsById():
@@ -116,7 +116,7 @@ def getStatsById():
     cnx.commit()
     cnx.close()
     return jsonify(df.to_json(orient='records'))
-    
+
 # Returns all player statistics by ID
 @app.route('/getStatsByIdAway')
 def getStatsByIdAway():
@@ -140,6 +140,66 @@ def getStatsByIdHome():
     cnx.commit()
     cnx.close()
     return jsonify(df.to_json(orient='records'))
+
+##########################################
+# LOGIN TO THE favUser SCREEN
+@app.route('/login', methods=['POST'])
+def login():
+    cnx = getConnection()
+    if request.method == 'POST':
+        #data = request.body
+        username = request.form.get("username")
+        password = request.form.get("password")
+    args=[username, password]
+    cursor = cnx.cursor()
+    try:
+        cursor.callproc('loginAttempt', args)
+    except:
+        return "User already exists"
+    cnx.commit()
+    cnx.close()
+    return "user added"
+
+@app.route('/addPlayerForUser')
+def addPlayerForUser():
+    cnx = getConnection()
+    userName = request.args['userName']
+    playerName = request.args['playerName']
+    args = [userName, playerName]
+    cursor = cnx.cursor()
+    cursor.callproc('addFavPlayer', args)
+    cnx.commit()
+    cnx.close()
+    return "player added for %s" % (userName)
+
+@app.route('/getFavPlayerNames')
+def getFavPlayerNames():
+    cnx = getConnection()
+    userName = request.args['userName']
+    args=[userName]
+    cursor = cnx.cursor()
+    cursor.callproc('getFavPlayerNames', args)
+    toReturn = []
+    for result in cursor.stored_results():
+        toReturn.append(result.fetchall())
+    cnx.commit()
+    cnx.close()
+    return jsonify(toReturn)
+
+@app.route('/deleteFavPlayer')
+def deleteFavPlayer():
+    cnx = getConnection()
+    userName = request.args['userName']
+    playerName = request.args['playerName']
+    args=[userName, playerName]
+    cursor = cnx.cursor()
+    data = cursor.callproc('deleteFavPlayer', args)
+    cnx.commit()
+    cnx.close()
+    return "Deleted"
+
+
+##########################################
 
 if __name__ == "__main__":
     app.run()
