@@ -147,18 +147,25 @@ def getStatsByIdHome():
 def login():
     cnx = getConnection()
     if request.method == 'POST':
-        #data = request.body
         username = request.form.get("username")
         password = request.form.get("password")
     args=[username, password]
     cursor = cnx.cursor()
+    cursor.callproc('loginAttempt', args)
+    data = cursor.stored_results()
     try:
-        cursor.callproc('loginAttempt', args)
+        if (next(data).fetchall()[0][0] == 1):
+            cnx.commit()
+            cnx.close()
+            return "success"
+        else:
+            cnx.commit()
+            cnx.close()
+            return "wrong password"
     except:
-        return "User already exists"
-    cnx.commit()
-    cnx.close()
-    return "user added"
+        cnx.commit()
+        cnx.close()
+        return "User added"
 
 @app.route('/addPlayerForUser')
 def addPlayerForUser():
