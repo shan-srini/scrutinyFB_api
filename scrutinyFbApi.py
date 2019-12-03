@@ -204,6 +204,16 @@ def deleteFavPlayer():
     cnx.commit()
     cnx.close()
     return "Deleted"
+    
+@app.route('/updatePass', methods=['POST'])
+def updatePass():
+    cnx = getConnection()
+    cursor = cnx.cursor()
+    args = [request.form.get("username"), request.form.get("password"), request.form.get("newPassword")]
+    cursor.callproc('updatePass', args)
+    cnx.commit()
+    cnx.close()
+    return "Procedure call complete"
 
 
 ##########################################
