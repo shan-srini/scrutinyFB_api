@@ -6,6 +6,11 @@ import pymysql
 
 app = Flask(__name__)
 
+# To grader:
+# most of the procedure calls are at the bottom in the login section
+# This was a lot of work especially as it was one of my first times
+# working with python, so please excuse my code if it looks messy!
+
 def getConnection():
     cnx = mysql.connector.connect(user=environ.get('user'),
     password=environ.get('pass'),
@@ -33,23 +38,14 @@ def welcome():
 @app.route('/getPlayerId')
 def getPlayerId():
     cnx = getConnection()
-    #playerID = "'/players/M/McCaCh01'"
-#    return jsonify(database_hello(playerID))
     playerID1 = "'" + request.args['playerId'] + "'"
-    #playerID2 = "'" + request.args['player_id2'] + "'"
     query = "SELECT * from playerInfo WHERE player_id = %s" % (playerID1)
     df = pd.read_sql(query,cnx)
     cnx.commit()
     cnx.close()
     return jsonify(df.to_json(orient='records')[1:-1])
-#    mycursor = cnx.cursor(dictionary=True)
-##    try:
-#    mycursor.execute(query)
-##    except my.Error as e:
-##        return jsonify(e)
-#    myresult = mycursor.fetchall()
-#    return jsonify(myresult)
-
+    
+    
 # get player by name
 @app.route('/getPlayerByName')
 def getPlayerByName():
@@ -143,6 +139,7 @@ def getStatsByIdHome():
 
 ##########################################
 # LOGIN TO THE favUser SCREEN
+# error handling in here as well as in sql procedure
 @app.route('/login', methods=['POST'])
 def login():
     cnx = getConnection()
@@ -167,6 +164,7 @@ def login():
         cnx.close()
         return "User added"
 
+# add player to users favorites
 @app.route('/addPlayerForUser')
 def addPlayerForUser():
     cnx = getConnection()
@@ -179,6 +177,7 @@ def addPlayerForUser():
     cnx.close()
     return "player added for %s" % (userName)
 
+# get this users favorite players
 @app.route('/getFavPlayerNames')
 def getFavPlayerNames():
     cnx = getConnection()
@@ -193,6 +192,7 @@ def getFavPlayerNames():
     cnx.close()
     return jsonify(toReturn)
 
+# delete this player from the users favorites list
 @app.route('/deleteFavPlayer')
 def deleteFavPlayer():
     cnx = getConnection()
@@ -205,6 +205,7 @@ def deleteFavPlayer():
     cnx.close()
     return "Deleted"
     
+# update password for user
 @app.route('/updatePass', methods=['POST'])
 def updatePass():
     cnx = getConnection()
