@@ -8,6 +8,7 @@ MySQL V: 5.1
 
 # Paths
 These are some REST API path examples
+<br/>
 To verify that user has been created & a player has been added/deleted to user's favorite list
 scrutiny-fb-api.herokuapp.com/getFavPlayerNames?userName= USER NAME INPUT (example is Shan)
 
