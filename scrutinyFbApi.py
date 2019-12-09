@@ -136,6 +136,26 @@ def getStatsByIdHome():
     cnx.commit()
     cnx.close()
     return jsonify(df.to_json(orient='records'))
+    
+#Get Stats refined, abstracted used for production
+@app.route('/getStats', methods=['POST'])
+def getStats():
+    cnx = getConnection()
+    cursor = cnx.cursor()
+    playerID = formatString(request.form.get("playerID"))
+    home_or_away = request.form.get("home_or_away")
+    dateLikeFormat = '%{}%'
+    year = formatString(dateLikeFormat.format(request.form.get("year")))
+    if(home_or_away == "full"):
+        query = "SELECT * FROM playerStats WHERE player_id = %s AND Date LIKE %s" % (playerID, year)
+    elif(home_or_away == "away"):
+        query = "SELECT * FROM playerStats WHERE player_id = %s AND home_or_away = '@' AND Date LIKE %s" % (playerID, year)
+    else:
+        query = "SELECT * FROM playerStats WHERE player_id = %s AND NOT home_or_away = '@' AND Date LIKE %s" % (playerID, year)
+    df = pd.read_sql(query, cnx)
+    cnx.commit()
+    cnx.close()
+    return jsonify(df.to_json(orient='records'))
 
 ##########################################
 # LOGIN TO THE favUser SCREEN
