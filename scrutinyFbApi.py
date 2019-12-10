@@ -157,6 +157,35 @@ def getStats():
     cnx.close()
     return jsonify(df.to_json(orient='records'))
 
+#Player splits gets it by using playerNames, keeping integrity using inner join
+@app.route('/getSplits')
+def getSplits():
+    cnx = getConnection()
+    cursor = cnx.cursor()
+    playerName = formatString(request.args["playerName"])
+    splitPlayerName = formatString(request.args["splitPlayerName"])
+    querySplitsWithout = """SELECT * FROM playerStats WHERE EXISTS (SELECT *
+    FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+    WHERE player_name = %s
+    AND Date NOT IN
+    (SELECT Date FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+    WHERE player_name = %s))""" % (playerName, splitPlayerName)
+    dfPlayerSplitsWithout = pd.read_sql(querySplitsWithout, cnx)
+    querySplitsWith = """SELECT * FROM playerStats WHERE EXISTS (SELECT *
+    FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+    WHERE player_name = %s
+    AND Date IN
+    (SELECT Date FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+    WHERE player_name = %s))""" % (playerName, splitPlayerName)
+    dfPlayerSplitsWith = pd.read_sql(querySplitsWith, cnx)
+    cnx.commit()
+    cnx.close()
+    toReturn = {
+    "splitsWithout" : dfPlayerSplitsWithout.to_json(orient='records'),
+    "splitsWith" : dfPlayerSplitsWith.to_json(orient='records')
+    }
+    return jsonify(toReturn)
+
 ##########################################
 # LOGIN TO THE favUser SCREEN
 # error handling in here as well as in sql procedure
