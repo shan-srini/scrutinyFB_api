@@ -164,20 +164,64 @@ def getSplits():
     cursor = cnx.cursor()
     playerName = formatString(request.args["playerName"])
     splitPlayerName = formatString(request.args["splitPlayerName"])
-    querySplitsWithout = """SELECT * FROM playerStats WHERE EXISTS (SELECT *
-    FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
-    WHERE player_name = %s
-    AND Date NOT IN
-    (SELECT Date FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
-    WHERE player_name = %s))""" % (playerName, splitPlayerName)
-    dfPlayerSplitsWithout = pd.read_sql(querySplitsWithout, cnx)
-    querySplitsWith = """SELECT * FROM playerStats WHERE EXISTS (SELECT *
-    FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
-    WHERE player_name = %s
-    AND Date IN
-    (SELECT Date FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
-    WHERE player_name = %s))""" % (playerName, splitPlayerName)
-    dfPlayerSplitsWith = pd.read_sql(querySplitsWith, cnx)
+    home_or_away = request.args("home_or_away")
+    dateLikeFormat = '%{}%'
+    year = formatString(dateLikeFormat.format(request.args["year"]))
+    if (home_or_away == "full"):
+        querySplitsWithout = """SELECT * FROM playerStats WHERE EXISTS (SELECT *
+        FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+        WHERE player_name = %s
+        AND Date LIKE %s
+        AND Date NOT IN
+        (SELECT Date FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+        WHERE player_name = %s))""" % (playerName, year, splitPlayerName)
+        dfPlayerSplitsWithout = pd.read_sql(querySplitsWithout, cnx)
+        querySplitsWith = """SELECT * FROM playerStats WHERE EXISTS (SELECT *
+        FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+        WHERE player_name = %s
+        AND Date LIKE %s
+        AND Date IN
+        (SELECT Date FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+        WHERE player_name = %s))""" % (playerName, year, splitPlayerName)
+        dfPlayerSplitsWith = pd.read_sql(querySplitsWith, cnx)
+    elif (home_or_away == "home"):
+        querySplitsWithout = """SELECT * FROM playerStats WHERE EXISTS (SELECT *
+        FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+        WHERE player_name = %s
+        AND NOT home_or_away = '@'
+        AND Date LIKE %s
+        AND Date NOT IN
+        (SELECT Date FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+        WHERE player_name = %s))""" % (playerName, year, splitPlayerName)
+        dfPlayerSplitsWithout = pd.read_sql(querySplitsWithout, cnx)
+        querySplitsWith = """SELECT * FROM playerStats WHERE EXISTS (SELECT *
+        FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+        WHERE player_name = %s
+        AND NOT home_or_away = '@'
+        AND Date LIKE %s
+        AND Date IN
+        (SELECT Date FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+        WHERE player_name = %s))""" % (playerName, year, splitPlayerName)
+        dfPlayerSplitsWith = pd.read_sql(querySplitsWith, cnx)
+    elif (home_or_away == "away"):
+        querySplitsWithout = """SELECT * FROM playerStats WHERE EXISTS (SELECT *
+        FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+        WHERE player_name = %s
+        AND home_or_away = '@'
+        AND Date LIKE %s
+        AND Date NOT IN
+        (SELECT Date FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+        WHERE player_name = %s))""" % (playerName, year, splitPlayerName)
+        dfPlayerSplitsWithout = pd.read_sql(querySplitsWithout, cnx)
+        querySplitsWith = """SELECT * FROM playerStats WHERE EXISTS (SELECT *
+        FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+        WHERE player_name = %s
+        AND home_or_away = '@'
+        AND Date LIKE %s
+        AND Date IN
+        (SELECT Date FROM playerStats JOIN playerInfo ON playerInfo.player_id = playerStats.player_id
+        WHERE player_name = %s))""" % (playerName, year, splitPlayerName)
+        dfPlayerSplitsWith = pd.read_sql(querySplitsWith, cnx)
     cnx.commit()
     cnx.close()
     toReturn = {
