@@ -6,11 +6,6 @@ import pymysql
 
 app = Flask(__name__)
 
-# To grader:
-# most of the procedure calls are at the bottom in the login section
-# This was a lot of work especially as it was one of my first times
-# working with python, so please excuse my code if it looks messy!
-
 def getConnection():
     cnx = mysql.connector.connect(user=environ.get('user'),
     password=environ.get('pass'),
